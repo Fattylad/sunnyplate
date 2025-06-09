@@ -1,0 +1,68 @@
+// === 1. Initialize Firebase ===
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "your-app.firebaseapp.com",
+  projectId: "your-app",
+};
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// === 2. Auth Functions ===
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => window.location = "dashboard.html")
+    .catch(e => alert(e.message));
+}
+
+function signup() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => window.location = "dashboard.html")
+    .catch(e => alert(e.message));
+}
+
+function logout() {
+  auth.signOut().then(() => window.location = "index.html");
+}
+
+// === 3. Submit Donation ===
+function submitDonation() {
+  const foodName = document.getElementById("foodName").value;
+  const location = document.getElementById("location").value;
+
+  db.collection("donations").add({
+    food: foodName,
+    location: location,
+    timestamp: new Date()
+  }).then(() => {
+    alert("Donation submitted!");
+    window.location = "dashboard.html";
+  }).catch(e => alert(e.message));
+}
+
+// === 4. Load Map ===
+function initMap() {
+  const brisbane = { lat: -27.4705, lng: 153.0260 };
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 12,
+    center: brisbane
+  });
+
+  db.collection("donations").get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      new google.maps.Marker({
+        position: brisbane,
+        map: map,
+        title: data.food
+      });
+    });
+  });
+}
